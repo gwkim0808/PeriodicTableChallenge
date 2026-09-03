@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Periodic Table Challenge</title>
     <style>
         * {
@@ -18,7 +18,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            min-height: 100vh;
+            min-height: 100dvh; /* 모바일 동적 뷰포트 높이 적용 */
         }
 
         .header-container {
@@ -305,7 +305,7 @@
             top: 0;
             left: 0;
             width: 100%;
-            height: 100%;
+            height: 100dvh; /* 모바일 동적 뷰포트 높이 적용 */
             background-color: rgba(0, 0, 0, 0.4);
             display: none;
             align-items: center;
@@ -876,6 +876,17 @@
             }
         });
 
+        // iOS Safari 가상 키보드 닫힘 시 터치 위치 어긋남(렌더링 버그) 방지 보정 로직
+        const allInputs = document.querySelectorAll('input[type="text"]');
+        allInputs.forEach(input => {
+            input.addEventListener('blur', () => {
+                setTimeout(() => {
+                    // 위치를 유지하면서 브라우저에 강제 렌더링 갱신을 유도
+                    window.scrollTo(document.documentElement.scrollLeft, document.documentElement.scrollTop);
+                }, 10);
+            });
+        });
+
         function checkWeightCorrect(userWeightRaw, correctWeightRaw) {
             const userStr = (userWeightRaw || '').trim();
             const correctStr = (correctWeightRaw || '').trim();
@@ -969,6 +980,7 @@
                     roTypeSection.style.display = 'none';
                 }
                 
+                document.body.style.overflow = 'hidden'; // 모달 열릴 때 백그라운드 스크롤 방지
                 readonlyModal.classList.add('active');
             } else {
                 document.getElementById('modal-title').innerText = `Atomic Number ${num}`;
@@ -1023,6 +1035,7 @@
 
                 modalError.style.display = 'none';
                 
+                document.body.style.overflow = 'hidden'; // 모달 열릴 때 백그라운드 스크롤 방지
                 inputModal.classList.add('active');
                 inputSymbol.focus();
             }
@@ -1030,10 +1043,12 @@
 
         document.getElementById('btn-cancel').addEventListener('click', () => {
             inputModal.classList.remove('active');
+            document.body.style.overflow = ''; // 모달 닫힐 때 스크롤 복구
         });
 
         document.getElementById('btn-close').addEventListener('click', () => {
             readonlyModal.classList.remove('active');
+            document.body.style.overflow = ''; // 모달 닫힐 때 스크롤 복구
         });
 
         document.getElementById('btn-save').addEventListener('click', () => {
@@ -1099,6 +1114,7 @@
             }
             
             inputModal.classList.remove('active');
+            document.body.style.overflow = ''; // 모달 닫힐 때 스크롤 복구
         });
 
         document.getElementById('btn-final-submit').addEventListener('click', () => {
