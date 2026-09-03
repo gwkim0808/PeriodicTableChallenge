@@ -18,7 +18,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            min-height: 100dvh; /* 모바일 동적 뷰포트 높이 적용 */
+            min-height: 100dvh;
         }
 
         .header-container {
@@ -305,7 +305,7 @@
             top: 0;
             left: 0;
             width: 100%;
-            height: 100dvh; /* 모바일 동적 뷰포트 높이 적용 */
+            height: 100dvh;
             background-color: rgba(0, 0, 0, 0.4);
             display: none;
             align-items: center;
@@ -881,11 +881,27 @@
         allInputs.forEach(input => {
             input.addEventListener('blur', () => {
                 setTimeout(() => {
-                    // 위치를 유지하면서 브라우저에 강제 렌더링 갱신을 유도
                     window.scrollTo(document.documentElement.scrollLeft, document.documentElement.scrollTop);
                 }, 10);
             });
         });
+
+        // 모달 열림 시 배경 스크롤 원천 차단 함수 (제미나이 iframe 환경 대응 포함)
+        function preventScroll(e) {
+            e.preventDefault();
+        }
+
+        function disableBackgroundScroll() {
+            document.body.style.overflow = 'hidden';
+            window.addEventListener('touchmove', preventScroll, { passive: false });
+            window.addEventListener('wheel', preventScroll, { passive: false });
+        }
+
+        function enableBackgroundScroll() {
+            document.body.style.overflow = '';
+            window.removeEventListener('touchmove', preventScroll);
+            window.removeEventListener('wheel', preventScroll);
+        }
 
         function checkWeightCorrect(userWeightRaw, correctWeightRaw) {
             const userStr = (userWeightRaw || '').trim();
@@ -980,7 +996,7 @@
                     roTypeSection.style.display = 'none';
                 }
                 
-                document.body.style.overflow = 'hidden'; // 모달 열릴 때 백그라운드 스크롤 방지
+                disableBackgroundScroll();
                 readonlyModal.classList.add('active');
             } else {
                 document.getElementById('modal-title').innerText = `Atomic Number ${num}`;
@@ -1035,7 +1051,7 @@
 
                 modalError.style.display = 'none';
                 
-                document.body.style.overflow = 'hidden'; // 모달 열릴 때 백그라운드 스크롤 방지
+                disableBackgroundScroll();
                 inputModal.classList.add('active');
                 inputSymbol.focus();
             }
@@ -1043,12 +1059,12 @@
 
         document.getElementById('btn-cancel').addEventListener('click', () => {
             inputModal.classList.remove('active');
-            document.body.style.overflow = ''; // 모달 닫힐 때 스크롤 복구
+            enableBackgroundScroll();
         });
 
         document.getElementById('btn-close').addEventListener('click', () => {
             readonlyModal.classList.remove('active');
-            document.body.style.overflow = ''; // 모달 닫힐 때 스크롤 복구
+            enableBackgroundScroll();
         });
 
         document.getElementById('btn-save').addEventListener('click', () => {
@@ -1092,7 +1108,6 @@
                     item.className = 'element-meta-item';
                     if (isConfig) {
                         item.classList.add('item-config');
-                        // 텍스트 길이가 길어 2줄 이상 표기되는 경우 폰트 크기 미량 축소
                         if (text.length > 13) {
                             item.classList.add('item-config-long');
                         }
@@ -1114,7 +1129,7 @@
             }
             
             inputModal.classList.remove('active');
-            document.body.style.overflow = ''; // 모달 닫힐 때 스크롤 복구
+            enableBackgroundScroll();
         });
 
         document.getElementById('btn-final-submit').addEventListener('click', () => {
