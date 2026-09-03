@@ -227,13 +227,11 @@
             line-height: 0.95 !important;
         }
 
-        /* 난이도별 유동적 폰트 사이즈 및 두께 최적화 */
-
-        /* 난이도 Easy (원소기호 글자 굵기 조율) */
+        /* 난이도 Easy */
         body.mode-easy .element-symbol { font-size: 46cqw; font-weight: 600; margin-bottom: 4cqw; }
         body.mode-easy .element-name { font-size: 24cqw; font-weight: 500; letter-spacing: -0.4px; }
 
-        /* 난이도 Medium (원소기호 글자 굵기 조율) */
+        /* 난이도 Medium */
         body.mode-medium .element-symbol { font-size: 36cqw; font-weight: 600; margin-bottom: 2cqw; }
         body.mode-medium .element-name { font-size: 18cqw; font-weight: 500; letter-spacing: -0.5px; margin-bottom: 3cqw; }
         body.mode-medium .element-meta-item { font-size: 15cqw; font-weight: 500; letter-spacing: -0.5px; line-height: 1.05; }
@@ -243,7 +241,7 @@
         body.mode-hard .element-name { font-size: 16cqw; font-weight: 500; letter-spacing: -0.5px; margin-bottom: 1cqw; }
         body.mode-hard .element-meta-item { font-size: 13cqw; font-weight: 500; letter-spacing: -0.5px; line-height: 1.05; }
 
-        /* 난이도 Extreme (모든 정보 크기를 확대하여 셀에 꽉 차게 배치) */
+        /* 난이도 Extreme */
         body.mode-extreme .element-symbol { font-size: 32cqw; font-weight: 600; margin-bottom: 0.5cqw; }
         body.mode-extreme .element-name { font-size: 17cqw; font-weight: 600; letter-spacing: -0.5px; margin-bottom: 1cqw; }
         body.mode-extreme .element-meta-item { font-size: 13cqw; font-weight: 500; letter-spacing: -0.5px; line-height: 1.02; }
@@ -399,6 +397,14 @@
             display: flex;
             align-items: center;
             gap: 4px;
+            padding: 2px 4px;
+            border-radius: 4px;
+        }
+
+        .modal-radio-group input[type="radio"]:focus + span,
+        .modal-radio-group label:has(input[type="radio"]:focus) {
+            outline: 2px solid #3b82f6;
+            outline-offset: 1px;
         }
 
         .modal-error {
@@ -829,6 +835,7 @@
         const inputConfig = document.getElementById('input-config');
         const inputWeight = document.getElementById('input-weight');
         const inputWeightNa = document.getElementById('input-weight-na');
+        const btnSave = document.getElementById('btn-save');
         
         const modalError = document.getElementById('modal-error');
 
@@ -876,7 +883,83 @@
             }
         });
 
-        // iOS Safari 가상 키보드 닫힘 시 터치 위치 어긋남(렌더링 버그) 방지 보정 로직
+        function focusRadioGroup(groupName) {
+            const checkedRadio = document.querySelector(`input[name="${groupName}"]:checked`);
+            if (checkedRadio) {
+                checkedRadio.focus();
+            } else {
+                const firstRadio = document.querySelector(`input[name="${groupName}"]`);
+                if (firstRadio) firstRadio.focus();
+            }
+        }
+
+        // 주관식 입력 필드 엔터 키 동작 처리
+        function handleModalEnterKey(e) {
+            if (e.key !== 'Enter') return;
+            e.preventDefault();
+
+            let activeInputs = [inputSymbol, inputName];
+            if (currentDifficulty === 'hard') {
+                activeInputs = [inputSymbol, inputName, inputConfig];
+            } else if (currentDifficulty === 'extreme') {
+                activeInputs = [inputSymbol, inputName, inputConfig, inputWeight];
+            }
+
+            const currentIndex = activeInputs.indexOf(e.target);
+            if (currentIndex !== -1) {
+                if (currentIndex < activeInputs.length - 1) {
+                    activeInputs[currentIndex + 1].focus();
+                } else {
+                    // 주관식 마지막 칸일 경우 난이도에 따라 객관식 포커스 혹은 저장
+                    if (currentDifficulty === 'easy') {
+                        btnSave.click();
+                    } else {
+                        focusRadioGroup('element-state');
+                    }
+                }
+            }
+        }
+
+        const modalInputElements = [inputSymbol, inputName, inputConfig, inputWeight];
+        modalInputElements.forEach(inputEl => {
+            inputEl.addEventListener('keydown', handleModalEnterKey);
+        });
+
+        // 객관식 라디오 버튼 키보드 조작 처리
+        function handleRadioGroupKeydown(e, groupName, nextGroupName) {
+            const radios = Array.from(document.querySelectorAll(`input[name="${groupName}"]`));
+            const currentIndex = radios.indexOf(e.target);
+            if (currentIndex === -1) return;
+
+            if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+                e.preventDefault();
+                const nextIndex = (currentIndex + 1) % radios.length;
+                radios[nextIndex].checked = true;
+                radios[nextIndex].focus();
+            } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+                e.preventDefault();
+                const prevIndex = (currentIndex - 1 + radios.length) % radios.length;
+                radios[prevIndex].checked = true;
+                radios[prevIndex].focus();
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                if (nextGroupName) {
+                    focusRadioGroup(nextGroupName);
+                } else {
+                    btnSave.click();
+                }
+            }
+        }
+
+        document.querySelectorAll('input[name="element-state"]').forEach(radio => {
+            radio.addEventListener('keydown', (e) => handleRadioGroupKeydown(e, 'element-state', 'element-type'));
+        });
+
+        document.querySelectorAll('input[name="element-type"]').forEach(radio => {
+            radio.addEventListener('keydown', (e) => handleRadioGroupKeydown(e, 'element-type', null));
+        });
+
+        // iOS Safari 가상 키보드 닫힘 시 터치 위치 어긋남 방지 보정 로직
         const allInputs = document.querySelectorAll('input[type="text"]');
         allInputs.forEach(input => {
             input.addEventListener('blur', () => {
@@ -886,7 +969,7 @@
             });
         });
 
-        // 모달 열림 시 배경 스크롤 원천 차단 함수 (제미나이 iframe 환경 대응 포함)
+        // 모달 열림 시 배경 스크롤 차단 함수
         function preventScroll(e) {
             e.preventDefault();
         }
@@ -1067,7 +1150,7 @@
             enableBackgroundScroll();
         });
 
-        document.getElementById('btn-save').addEventListener('click', () => {
+        btnSave.addEventListener('click', () => {
             const symVal = inputSymbol.value;
             const nameVal = inputName.value;
             const configVal = inputConfig.value;
