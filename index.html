@@ -1021,7 +1021,8 @@
                 const userState = ans.state ? ans.state : '입력하지 않음';
                 const userType = ans.type ? ans.type : '입력하지 않음';
                 
-                const isSymCorrect = ans.sym.trim().toLowerCase() === elData.sym.toLowerCase();
+                // 원소 기호 대소문자 엄격 비교
+                const isSymCorrect = ans.sym.trim() === elData.sym;
                 const isNameCorrect = ans.name.trim() === elData.name;
                 const isConfigCorrect = ans.config.replace(/\s+/g, '').toLowerCase() === elData.config.replace(/\s+/g, '').toLowerCase();
                 const isWeightCorrect = checkWeightCorrect(ans.weight, elData.weight);
@@ -1225,7 +1226,8 @@
                 const ans = userAnswers[el.num] || { sym: '', name: '', config: '', weight: '', state: '', type: '' };
                 const cell = document.getElementById(`cell-${el.num}`);
                 
-                const isSymCorrect = ans.sym.trim().toLowerCase() === el.sym.toLowerCase();
+                // 원소 기호 대소문자 엄격 비교
+                const isSymCorrect = ans.sym.trim() === el.sym;
                 const isNameCorrect = ans.name.trim() === el.name;
                 const isConfigCorrect = ans.config.replace(/\s+/g, '').toLowerCase() === el.config.replace(/\s+/g, '').toLowerCase();
                 const isWeightCorrect = checkWeightCorrect(ans.weight, el.weight);
